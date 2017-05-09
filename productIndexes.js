@@ -23,7 +23,7 @@ var indexesArePresentByName = function(collection, indexNames) {
 
 var indexIsPresentByName = function(collection, indexName) {
  var indexes = db.getCollection(collection).getIndexes();
- return indexes.map( function(i) { return i.name } ).filter( function(i) { return i==indexName } ).length != 1
+ return indexes.map( function(i) { return i.name } ).filter( function(i) { return i==indexName } ).length ==1
 }
 
 // Ensure we are in the correct database
