@@ -1,0 +1,7 @@
+Found few of these kinds of entries:
+
+Mon May  8 14:58:39.367 I COMMAND  [conn2572] command EN_All_All.product command: aggregate { aggregate: "product", pipeline: [ { $match: { find: "EN_ALL_ALL.product", filter: { _id: "Prod-165384" }, limit: 1, singleBatch: true } } ], allowDiskUse: true, maxTimeMS: 10000, cursor: { batchSize: 1000 } } planSummary: COLLSCAN keysExamined:0 docsExamined:864760 cursorExhausted:1 numYields:6758 nreturned:0 reslen:106 locks:{ Global: { acquireCount: { r: 13524 } }, Database: { acquireCount: { r: 6762 } }, Collection: { acquireCount: { r: 6761 } } } protocol:op_query 659ms
+Mon May  8 14:58:41.286 I COMMAND  [conn2570] command EN_All_All.product command: find { find: "product", filter: { find: "EN_ALL_ALL.product", filter: { _id: "Prod-165384" }, limit: 1, singleBatch: true }, sort: { _id: 1 }, limit: 20 } planSummary: IXSCAN { _id: 1 } keysExamined:864760 docsExamined:864760 cursorExhausted:1 numYields:6776 nreturned:0 reslen:106 locks:{ Global: { acquireCount: { r: 13554 } }, Database: { acquireCount: { r: 6777 } }, Collection: { acquireCount: { r: 6777 } } } protocol:op_query 2585ms
+
+Very odd - these are queries on _id yet scanning 800K+ documents?
+
