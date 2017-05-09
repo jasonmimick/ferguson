@@ -1,0 +1,57 @@
+DiskReadahead: notest
+Unable to get mongo dbpath fsinfo
+--------------------
+FsMaxOpenFiles: pass
+The recommended sysctl value for "fs.file-max" is = 98000. Please see https://docs.mongodb.com/manual/administration/production-checklist/#linux for other best practices.
+--------------------
+IptablesEmpty: fail
+Iptables is not useful without any configured rules. Please see https://docs.mongodb.com/manual/tutorial/configure-linux-iptables-firewall for recommendations on configuring iptables.
+--------------------
+KernelMaxPid: fail
+The recommended sysctl value for "kernel.pid_max" is = 64000. Please see https://docs.mongodb.com/manual/administration/production-checklist/#linux for other best practices.
+--------------------
+KernelMaxThreads: pass
+The recommended sysctl value for "kernel.threads-max" is = 64000. Please see https://docs.mongodb.com/manual/administration/production-checklist/#linux for other best practices.
+--------------------
+Limits: pass
+Process and user limits with low default values can cause a number of issues in the course of normal MongoDB operation. Please see http://docs.mongodb.org/manual/reference/ulimit/ for further information and recommendations.
+--------------------
+MongoDBPathFsIsExt4: notest
+Unable to get mongo dbpath info
+--------------------
+MongoDBPathFsIsXfs: notest
+Unable to get mongo dbpath info
+--------------------
+Numa: pass
+Running MongoDB on a system with NUMA can cause a number of operational problems, including slow performance for periods of time and high system process usage. Please see http://docs.mongodb.org/manual/administration/production-notes/#mongodb-and-numa-hardware for further information and recommendations.
+--------------------
+RedhatVersion57: pass
+Red Hat 5.7 deploys a Linux kernel that is known to cause problematic behaviour with MongoDB. If you are not able to upgrade, be sure to use EXT4 with a kernel version >= 2.6.18-3.0. Please see our [production notes](http://docs.mongodb.org/manual/administration/production-notes/) for other best practices. This page provides the full list of [supported Operating Systems for use with MongoDB](https://docs.mongodb.com/manual/administration/production-notes/#supported-platforms).
+--------------------
+SuseVersion11: notest
+
+--------------------
+SwapInEtcFstab: pass
+There does not appear to be a swap partition defined in __/etc/fstab__. Allocating swap space can avoid issues with memory contention and can prevent the OOM Killer on Linux systems from killing mongod. See our [production notes](http://docs.mongodb.org/manual/administration/production-notes/#swap) for additional information.
+--------------------
+SwapInProcSwaps: pass
+There does not appear to be a device file in __/proc/swaps__. Allocating swap space can avoid issues with memory contention and can prevent the OOM Killer on Linux systems from killing mongod. See our [production notes](http://docs.mongodb.org/manual/administration/production-notes/#swap) for additional information.
+--------------------
+TcpKeepAlive: fail
+The recommended sysctl value for "net.ipv4.tcp_keepalive_time" is <= 120, whereas the current value is 7200. Please see our [production notes](http://docs.mongodb.org/manual/administration/production-notes/) for other best practices.
+
+In the case where your MongoDB deployment runs on AWS or on Azure, we have found a lower tcp_keepalive_time is required. If you use either of these Public Cloud providers, please use a 75 seconds for this time out, e.g. "net.ipv4.tcp_keepalive_time" = 75.
+--------------------
+TransparentHugepagesDefrag: fail
+THP is known to perform poorly under database workloads, which tend to have sparse rather than contiguous memory access patterns. You should disable THP Defrag (as well as THP) on Linux machines used to run MongoDB instances to ensure best performance. Please see http://docs.mongodb.org/manual/tutorial/transparent-huge-pages for further information and recommendations.
+--------------------
+TransparentHugepagesEnabled: pass
+THP is known to perform poorly under database workloads, which tend to have sparse rather than contiguous memory access patterns. You should disable THP on Linux machines used to run MongoDB instances to ensure best performance. Please see http://docs.mongodb.org/manual/tutorial/transparent-huge-pages for further information and recommendations.
+--------------------
+Vmware: warn
+MongoDB is compatible with VMWare, but to achieve the best performance please see our [VMWare production notes](http://docs.mongodb.org/manual/administration/production-notes/#vmware) for recommendations and best practices.
+--------------------
+VmwareBallooning: fail
+MongoDB is known to run poorly with a variety of balloon drivers such as VMWare's (*vmmemctl*), you must map and reserve the full amount of memory for the virtual machine running MongoDB. If this feature is not available for your ballon driver/virtual machine, then please review the specific documentation for your virtualisation software to determine how to disable ballooning. Please see our [production notes](http://docs.mongodb.org/manual/administration/production-notes/) (if you are using VMWare, please see our specific [VMWare production notes](http://docs.mongodb.org/manual/administration/production-notes/#vmware)) for further information and recommendations.
+
+--------------------
