@@ -9,12 +9,12 @@
 * By: Jason Mimick
 *
 */
-print("product index maintentance script starting" + new Date());
+print("product index maintentance script starting: " + new Date());
 
 var indexesArePresentByName = function(collection, indexNames) {
-  indexNames.forEach( function(in) {
-    if (!indexIsPresentByName(collection,in)) {
-      print("Collection: " + collection + " is missing index: " + in);
+  indexNames.forEach( function(iname) {
+    if (!indexIsPresentByName(collection,iname)) {
+      print("Collection: " + collection + " is missing index: " + iname);
       return false;
     }
   });
@@ -33,8 +33,8 @@ var db = db.getSiblingDB("EN_All_All");
 var indexes = db.product.getIndexes();
 
 // we expect only index on _id named: "_id_"
-if ( !indexIsPresentByName("product","_id_") {
-  print("Detected missing "_id" indexes or other indexes present. Please check system.");
+if ( !indexIsPresentByName("product","_id_")) {
+  print("Detected missing \"_id\" indexes or other indexes present. Please check system.");
   quit();
 }
 
