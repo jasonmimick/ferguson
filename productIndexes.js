@@ -32,21 +32,26 @@ var db = db.getSiblingDB("EN_All_All");
 // Check what indexes are already defined on the product collection
 var indexes = db.product.getIndexes();
 
-// we expect only index on _id named: "_id_"
-if ( !indexIsPresentByName("product","_id_")) {
-  print("Detected missing \"_id\" indexes or other indexes present. Please check system.");
-  quit();
-}
 
 print("product index maintentance script creating { \"objectTypeID\":1,\"values.FLD_eCatalog Product Detail\"} index in background: " + new Date());
 
 db.product.createIndex( { "objectTypeID" : 1, "values.FLD_eCatalog Product Details" : 1 },
                         { "background" : true } );
 
-var expectedIndexNames = [ "_id_", "objectTypeID_1_values.FLD_eCatalog Product Details_1" ];
+print("product index maintentance script creating { \"values.MP_S_MASTER. PRODUCT\":1} index in background: " + new Date());
+
+db.product.createIndex( { "values.MP_S_MASTER. PRODUCT" : 1 },
+                        { "background" : true } );
+
+var expectedIndexNames = [ "_id_", 
+			   "objectTypeID_1_values.FLD_eCatalog Product Details_1",
+			   "values.MP_S_MASTER. PRODUCT_1" ];
+
 print("Validating correct indexes: " + JSON.stringify( expectedIndexNames) );
 indexesArePresentByName("product",expectedIndexNames);
 
 print("product index maintentance script complete" + new Date());
 
-
+//
+// need to create a new index on { "objectTypeID" : 1, "values.MP_S_MASTER．PRODUCT" : 1 }
+//

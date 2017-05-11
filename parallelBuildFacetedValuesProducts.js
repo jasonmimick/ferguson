@@ -38,29 +38,50 @@
 *
 */
 
+// NOTE - requires the file parallelTester.js
+// be present in same directory
+load("./parallelTester.js");
+let NUM_WORKERS = 1;
+let APPROX_NUM_DOCS_IN_CHUNK = 1000;
 
 
 
 
-var workOnChunkOfProducts = function(startId,
-                                     endId,
+let workOnChunkOfProducts = function(startId,
+									 endId, 
+									 dbname,
+									 collection) {
 
-	var products = db.product.find( { "objectTypeID" : "Product" },
-									{ "values" : 1 });
-
-	var inserts = [];	// we'll batch up 1000 inserts
-							// to use bulk loading
-
-	var numProductsWithoutValues = 0;
-
-	while ( products.hasNext() ) {
-		if ( inserts.length==1000 ) {
-			result = db.product.facets.insert(inserts);
-			if ( result.writeErrors && result.writeErrors.length>0 ) {
-				printjson(result);
-			}
-			inserts.length = 0;    // reset inserts array
+	// cache "Eco_LOV_*" listofvalues
+	let listofvalues = {};
+	let lc = db.getSiblingDB(dbname).getCollection("listofvalues")
+									.find({},{"name":1});
+	while ( lc.hasNext() ) {
+		let l = lc.next();
+		listofvalues[l["_id"]]=l.name;
+	}
+	let lookupListOfValues = function(key,dbname,collection) {
+		let kp = key.split("_");	// TODO check kp is correct
+		let lovId = kp[0] + "_LOV_" + kp[1];
+		if (listofvalues[lovId]!=null) {
+			return listofvalues[lovId];
+		} else {
+			// TODO: Log that key not found!
+			return key;
 		}
+	}
+	
+    let ret = {}; // object to return
+	let productQuery = { "_id" : { "$gte" : startId, "$lt" : endId },
+		                 "objectTypeID" : "Product" };
+	let productProjection = { "values" : 1 };
+	let col = db.getSiblingDB(dbname).getCollection(collection);
+	let products = col.find( productQuery,
+							 productProjection);
+	let numProductsWithoutValues = 0;
+	let inserts = [];
+	
+	while ( products.hasNext() ) {
 		var product = products.next();
 		if ( !product.values ) {
 			numProductsWithoutValues++;	
@@ -68,33 +89,114 @@ var workOnChunkOfProducts = function(startId,
 		}
 		var valueKeys = Object.keys(product.values);
 		let facets = valueKeys.map( function(k) { 
-			return { "k" : k, "v" : product.values[k] };
+			let r = {};
+			r.k = k;
+			r.v = product.values[k];
+			if ( k.indexOf("Eco")==0 ) {   // try to get human key
+				let hk = lookupListOfValues(k,dbname,"listofvalues");
+				if ( hk != k ) {
+					r.hk = hk;
+				}
+			}
+			return r;
 		});
 		let facetValues = valueKeys.map( function(k) {
 			return product.values[k];
 		});
 		inserts.push( { "_id" : product._id, "facets" : facets, "facetValues" : facetValues } );
 	}
-	
+	let facetsCol = db.getSiblingDB(dbname).getCollection(collection+".facets");
+	//ret['inserts'] = inserts;
+	ret['insertResult'] = facetsCol.insertMany(inserts, { "ordered" : false });
+	ret['numProductsWithoutValues']=numProductsWithoutValues;
+	return ret;
+}	
+
+
+let workOnBatch = function(splitKeys,current,lastBatchFlag,db_name,coll_name) {
+    var threads = [];
+    splitKeys.forEach( function(key) {
+        print("Launching shell for chunk [ " + current + "," + key._id + "]");
+        var thread = new ScopedThread(workOnChunkOfProducts, current, key._id, db_name, coll_name);
+        threads.push(thread);
+        thread.start();
+        current = key._id;
+    });
+
+    if ( lastBatchFlag ) {
+        var thread = new ScopedThread(workOnChunkOfProducts, current, MaxKey, db_name, coll_name);
+        threads.push( thread );
+        thread.start();
+    }
+    // Wait for all threads to finish and print out their summaries
+    threads.forEach(function(t) {
+        t.join();
+    });
+    threads.forEach(function(t) {
+        printjson(t.returnData());
+    });
+    return current;
+}
+
+
 
 
 // "main"
 db = db.getSiblingDB("ferguson");
 
 db.product.facets.drop();
-let result = db.product.facets.createIndex( { "values.k" : 1, "values.v" : 1 } );
-printjson(result);
-result = db.product.facets.createIndex( { "values.v" : 1 } );
-printjson(result);
 
 
+let dbname = "ferguson";
+let prodColl = "product";
+let namespace = dbname+"."+prodColl;
+
+let objSize = db.getCollection(prodColl).stats().avgObjSize 
+let splitSizeBytes = (objSize * (2 * APPROX_NUM_DOCS_IN_CHUNK));
+
+let minChunk = { "_id" : "Prod-" };
+let maxChunk = { "_id" : "Proe-" };
+let split = db.runCommand( {splitVector: namespace, 
+                            keyPattern: {_id: 1},
+                            maxChunkSizeBytes : splitSizeBytes,
+							min : minChunk,
+							max : maxChunk } );
+
+// Now call workOnBatch for each batch
+// of NUM_WORKERS splitKeys
+var current = MinKey;
+var i = 0;
+var lastBatchFlag = false;
+var numBatches = Math.ceil(split.splitKeys.length/NUM_WORKERS);
+var startTime = new Date().getTime();
+for(var i=0; i<numBatches; i++) {
+    var start = i * NUM_WORKERS;
+    var stop = (i+1) * NUM_WORKERS;
+    if ( stop > split.splitKeys.length ) {
+        stop = split.splitKeys.length;
+        lastBatchFlag = true;
+    }
+    var keys = split.splitKeys.slice(i*NUM_WORKERS,(i+1)*NUM_WORKERS);
+    current = workOnBatch(keys, current, lastBatchFlag, dbname, prodColl);
+}
+var endTime = new Date().getTime();
+
+print("Total runtime: " + (endTime-startTime)/1000 + " seconds.");
+
+
+
+let numProducts = db.product.count({ "objectTypeID" : "Product" });
 let numProductFacets = db.product.facets.count();
 
+let buildProductIndexes = function(background=true) {
+	db.product.facets.createIndex( { "values.k" : 1, "values.v" : 1 },
+	                               { "background" : background } );
+	db.product.facets.createIndex( { "values.v" : 1 },
+	                               { "background" : background } );
+
+}
 print("number of products = " +  numProducts);
 print("number of product.facets = " +  numProductFacets);
 print("number of products without values = " +  numProductsWithoutValues);
-let end = new Date().getTime();
 print("product.facets collection done, runtime = " + (end-start));
-var numProducts = db.product.count({ "objectTypeID" : "Product" });
 
-let start = new Date().getTime();
