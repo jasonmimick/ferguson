@@ -38,14 +38,14 @@ print("product index maintentance script creating { \"objectTypeID\":1,\"values.
 db.product.createIndex( { "objectTypeID" : 1, "values.FLD_eCatalog Product Details" : 1 },
                         { "background" : true } );
 
-print("product index maintentance script creating { \"values.MP_S_MASTER. PRODUCT\":1} index in background: " + new Date());
+print("product index maintentance script creating { \"objectTypeID\":1,\"values.MP_S_MASTER. PRODUCT\":1} index in background: " + new Date());
 
-db.product.createIndex( { "values.MP_S_MASTER. PRODUCT" : 1 },
+db.product.createIndex( { "objectTypeID" : 1, "values.MP_S_MASTER. PRODUCT" : 1 },
                         { "background" : true } );
 
 var expectedIndexNames = [ "_id_", 
 			   "objectTypeID_1_values.FLD_eCatalog Product Details_1",
-			   "values.MP_S_MASTER. PRODUCT_1" ];
+			   "objectTypeID_1_values.MP_S_MASTER. PRODUCT_1" ];
 
 print("Validating correct indexes: " + JSON.stringify( expectedIndexNames) );
 indexesArePresentByName("product",expectedIndexNames);
