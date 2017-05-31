@@ -48,9 +48,9 @@ let APPROX_NUM_DOCS_IN_CHUNK = 1000;
 
 
 let workOnChunkOfProducts = function(startId,
-									 endId, 
-									 dbname,
-									 collection) {
+                                     endId, 
+			             dbname,
+			             collection) {
 
 	// cache "Eco_LOV_*" listofvalues
 	let listofvalues = {};
