@@ -1,16 +1,17 @@
 Lookups for Ferguson Product Data with MongoDB
 ==============================================
+<sub>By Jason Mimick, MongoDB</sub>
 
 This article will describe how to perform "lookup"-type
 operations for the product data stored in MongoDB.
 
 The product data in MongoDB carry over certain structures
-from the source Stibo system. This includes some key or values
+from the source Stibo system. This includes some keys or values
 which actually are pointers to documents in other collections.
-For example, each product in the {{product}} collection has a key
-called {{values}} which is an embedded document:
+For example, each product in the ``product`` collection has a key
+called ``values`` which is an embedded document:
 
-====
+```javascript
 {
     "_id" : "Prod-663859",
     "objectTypeID" : "Product",
@@ -71,23 +72,23 @@ called {{values}} which is an embedded document:
     "type" : "product",
     "parentID" : "ProdFamily-277577"
 }  
-===
+```
 (some keys have been omitted for brevity)
 
-Note the {{values}} sub-document has some key-names like {{Eco_226}} or 
-{{Eco_365}}. These key-names are referring to documents in the {{listofvalues}}
+Note the ``values`` sub-document has some key-names like ``Eco_226`` or 
+``Eco_365``. These key-names are referring to documents in the ``listofvalues``
 collection:
 
-===
+```javascript
 db.listofvalues.find({"_id":"Eco_LOV_226"})
 { "_id" : "Eco_LOV_226", "name" : "Color/Finish Name - FEI", "type" : "listofvalues" }
-===
+```
 
-This tells us that the key {{Eco_226}} really means color. The convention is that the string
-{{LOV_}} is inserted between the {{Eco_}} and {{226}}. So we can write a function
-to perform this lookup given a particular {{values}} key-name:
+This tells us that the key ``Eco_226`` really means color. The convention is that the string
+``LOV_`` is inserted between the ``Eco_`` and ``226``. So we can write a function
+to perform this lookup given a particular ``values`` key-name:
 
-===
+```javascript
 function lookupListOfValue(key) {
    // if the key isn't the correct format
    // just return it, we can't do the lookup
@@ -105,5 +106,54 @@ function lookupListOfValue(key) {
       return key;   // can't find
    }
 }
-===
-   let lo
+```
+We can now create a *human* version of a product like this:
+
+```javascript
+function convertProduct(product) {
+    let valueKeys = Object.keys(product.values);
+    let convertedValueKeys = {};
+    // This builds a map from the internal key name to
+    // the looked up name
+    valueKeys.forEach( function(key) {
+        convertedValueKeys[key] = lookupListOfValue(key);
+    })
+    let keysToRemove = [];
+    Object.keys(product.values).forEach( function(key) {
+        let value = product.values[key];
+        let newKey = lookupListOfValue(key);
+        product.values[newKey] = value;
+        if ( newKey != key ) {
+            keysToRemove.push(key);
+        }
+    })
+    // Now remove the keys we've replaced
+    keysToRemove.forEach( function(key) {
+        delete product.values[key];
+    })
+    return product;
+}
+```
+
+And we can test these functions with something like:
+
+```javascript
+let product = db.product.findOne({"objectTypeID":"Product"});
+printjson(product);
+printjson(convertProduct(product));
+```
+
+Now, one may be tempted to try and use the aggregation framework
+``$lookup`` operator. This problem, however, isn't quiet suited for
+that operator since we don't know a priori the names of the ``Eco_`` keys.
+If these were some fixed set value for each document, then an aggregation
+could do this kind of transformation. Since this this type of conversion
+may be neccessary it may be worthwhile to investigate alternative
+mapping techniques in the STEP adapater. For example, is it possible
+to just export the external values rather than the {{Eco_123}}-type 
+values? Are the internal values required for any particular business
+functionality?
+
+If the looked-into collection is small, appications may wish to actually
+cache a map of internal to external values in memory to reduce roundtrips
+to the database.

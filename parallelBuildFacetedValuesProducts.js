@@ -55,7 +55,7 @@ let workOnChunkOfProducts = function(startId,
 	// cache "Eco_LOV_*" listofvalues
 	let listofvalues = {};
 	let lc = db.getSiblingDB(dbname).getCollection("listofvalues")
-									.find({},{"name":1});
+				        .find({},{"name":1});
 	while ( lc.hasNext() ) {
 		let l = lc.next();
 		listofvalues[l["_id"]]=l.name;
@@ -71,7 +71,7 @@ let workOnChunkOfProducts = function(startId,
 		}
 	}
 	
-    let ret = {}; // object to return
+        let ret = {}; // object to return
 	let productQuery = { "_id" : { "$gte" : startId, "$lt" : endId },
 		                 "objectTypeID" : "Product" };
 	let productProjection = { "values" : 1 };
