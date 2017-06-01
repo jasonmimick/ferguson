@@ -157,3 +157,6 @@ functionality?
 If the looked-into collection is small, appications may wish to actually
 cache a map of internal to external values in memory to reduce roundtrips
 to the database.
+
+The code examples in this article are available to download at test: 
+[LookupSampleCode.js](LookupSampleCode.js)
