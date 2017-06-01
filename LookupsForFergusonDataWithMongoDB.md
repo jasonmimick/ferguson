@@ -150,7 +150,7 @@ If these were some fixed set value for each document, then an aggregation
 could do this kind of transformation. Since this this type of conversion
 may be neccessary it may be worthwhile to investigate alternative
 mapping techniques in the STEP adapater. For example, is it possible
-to just export the external values rather than the {{Eco_123}}-type 
+to just export the external values rather than the ``Eco_123``-type 
 values? Are the internal values required for any particular business
 functionality?
 
