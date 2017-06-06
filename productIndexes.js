@@ -5,7 +5,7 @@
 * This is a sample script to craate and maintain the indexes
 * on the EN_All_All.product collection.
 *
-* Last Update: May 9, 2017
+* Last Update: June 6, 2017
 * By: Jason Mimick
 *
 */
@@ -38,14 +38,21 @@ print("product index maintentance script creating { \"objectTypeID\":1,\"values.
 db.product.createIndex( { "objectTypeID" : 1, "values.FLD_eCatalog Product Details" : 1 },
                         { "background" : true } );
 
-print("product index maintentance script creating { \"objectTypeID\":1,\"values.MP_S_MASTER. PRODUCT\":1} index in background: " + new Date());
+print("product index maintentance script creating { \"objectTypeID\":1,\"values.MP_S_MASTER\uFF0EPRODUCT\":1} index in background: " + new Date());
 
-db.product.createIndex( { "objectTypeID" : 1, "values.MP_S_MASTER. PRODUCT" : 1 },
+db.product.createIndex( { "objectTypeID" : 1, "values.MP_S_MASTER\uFF0EPRODUCT" : 1 },
                         { "background" : true } );
+
+print("product index maintentance script creating { \"objectTypeID\":1,\"values.MP_ALT\uFF0ECODES1\":1} index in background: " + new Date());
+
+db.product.createIndex( { "objectTypeID" : 1, "values.MP_ALT\uFF0ECODES1" : 1 },
+                        { "background" : true } );
+
 
 var expectedIndexNames = [ "_id_", 
 			   "objectTypeID_1_values.FLD_eCatalog Product Details_1",
-			   "objectTypeID_1_values.MP_S_MASTER. PRODUCT_1" ];
+			   "objectTypeID_1_values.MP_S_MASTER\uFF0EPRODUCT_1",
+			   "objectTypeID_1_values.MP_ALT\uFF0ECODES1_1];
 
 print("Validating correct indexes: " + JSON.stringify( expectedIndexNames) );
 indexesArePresentByName("product",expectedIndexNames);
@@ -53,5 +60,5 @@ indexesArePresentByName("product",expectedIndexNames);
 print("product index maintentance script complete" + new Date());
 
 //
-// need to create a new index on { "objectTypeID" : 1, "values.MP_S_MASTER．PRODUCT" : 1 }
+// 
 //
