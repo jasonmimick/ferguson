@@ -52,7 +52,7 @@ db.product.createIndex( { "objectTypeID" : 1, "values.MP_ALT\uFF0ECODES1" : 1 },
 var expectedIndexNames = [ "_id_", 
 			   "objectTypeID_1_values.FLD_eCatalog Product Details_1",
 			   "objectTypeID_1_values.MP_S_MASTER\uFF0EPRODUCT_1",
-			   "objectTypeID_1_values.MP_ALT\uFF0ECODES1_1];
+			   "objectTypeID_1_values.MP_ALT\uFF0ECODES1_1"];
 
 print("Validating correct indexes: " + JSON.stringify( expectedIndexNames) );
 indexesArePresentByName("product",expectedIndexNames);
